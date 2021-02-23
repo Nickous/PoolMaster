@@ -1,0 +1,4 @@
+{
+    "programmer": "AVRISP mkII",
+    "board": "my_boards:avr:mega"
+}
