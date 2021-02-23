@@ -39,8 +39,8 @@
 
 #else //Mega2560 board specifics
 
-#include <Wire.h>
-#include "RTClib.h"
+#include <Wire.h>               // Two wires / I2C library
+#include "RTClib.h"             // RTC library
 RTC_DS3231 rtc;
 
 #if !( defined(ARDUINO_AVR_MEGA) || defined(ARDUINO_AVR_MEGA2560) )
@@ -88,8 +88,8 @@ RTC_DS3231 rtc;
 
 // Setup a oneWire instance to communicate with any OneWire devices
 OneWire oneWire_A(ONE_WIRE_BUS_A);
-#include <DallasTemperature.h>
-#include <MQTT.h>
+#include <DallasTemperature.h>    // Maxim (Dallas DS18B20) Temperature sensor library
+#include <MQTT.h>                 // MQTT library
 
 // Pass our oneWire reference to Dallas Temperature library instance
 DallasTemperature sensors_A(&oneWire_A);

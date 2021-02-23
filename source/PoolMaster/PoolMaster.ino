@@ -1,4 +1,21 @@
 /*
+#Nickous TO DO#
+  - ajouter ArduinoOTA pour update via reseau
+  - ajouter relais pour RobotPump
+  - ajouter capteur temperature Air
+  - gestion des lumières du poolhouse
+  - voir modifs de Gixy31 https://forum.arduino.cc/index.php?topic=586092.msg4828612#msg4828612
+    - passge de JSON 5 à 6
+    - filtration centrée sur 15h pour filtrer aux heures les plus chaudes de la journée, 
+    - changement des logiques à heure fixe (par exemple dans la version Loic, le calcul de la durée de filtration est effectué plusieurs fois, tant que les minutes sont à 0...) ;
+    - passage sur PlatformIO
+    - client MQTT asynchrone
+    - stockage NVS atomique (variable par variable)
+    - lecture calibrée des entrées analogiques
+    - sampletime de l'ORP
+    - initailisation de quelques variables du Nextion
+    - passer l'écran Nextion en mode "sleep" après un temps d'inactivité 
+###############
 
   Arduino/Controllino-Maxi/ATmega2560 based Ph/ORP regulator for home pool sysem
   (c) Loic74 <loic74650@gmail.com> 2018-2020
@@ -99,25 +116,23 @@
 ***Dependencies and respective revisions used to compile this project***
   https://github.com/256dpi/arduino-mqtt/releases (rev 2.4.3)
   https://github.com/CONTROLLINO-PLC/CONTROLLINO_Library (rev 3.0.4)
-  https://github.com/256dpi/arduino-mqtt/releases (rev 2.4.3)
-  https://github.com/CONTROLLINO-PLC/CONTROLLINO_Library (rev 3.0.4)
   https://github.com/PaulStoffregen/OneWire (rev 2.3.4)
   https://github.com/milesburton/Arduino-Temperature-Control-Library (rev 3.7.2)
   https://github.com/RobTillaart/Arduino/tree/master/libraries/RunningMedian (rev 0.1.15)
-  https://github.com/prampec/arduino-softtimer (rev 3.1.3)
-  https://github.com/bricofoy/yasm (rev 0.9.2)
+  https://github.com/prampec/arduino-softtimer (rev 3.1.3) #Nickous 3.2.0 + require external dependence library PCIManager 
+  https://github.com/bricofoy/yasm (rev 0.9.2) #Nickous 1.0.5
   https://github.com/br3ttb/Arduino-PID-Library (rev 1.2.0)
   https://github.com/bblanchon/ArduinoJson (rev 5.13.4)
-  https://github.com/johnrickman/LiquidCrystal_I2C (rev 1.1.2)
+  https://github.com/johnrickman/LiquidCrystal_I2C (rev 1.1.2) #Nickous 0.3.2
   https://github.com/thijse/Arduino-EEPROMEx (rev 1.0.0)
-  https://github.com/EinarArnason/ArduinoQueue
-  https://github.com/Loic74650/Pump (rev 0.0.1)
-  https://github.com/PaulStoffregen/Time (rev 1.5) -> /!\ Bug: in file "Time.cpp" "static const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};" must be replaced by "static volatile const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};"
+  https://github.com/EinarArnason/ArduinoQueue #Nickous 1.2.3
+  https://github.com/Loic74650/Pump (rev 0.0.1) #Nickous attention put file Pump.h in main directory
+  https://github.com/PaulStoffregen/Time (rev 1.5) -> /!\ Bug: in file "Time.cpp" "static const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};" must be replaced by "static volatile const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};" #Nickous 1.6
   https://github.com/adafruit/RTClib (rev 1.2.0)
   https://github.com/thomasfredericks/Bounce2 (rev 2.5.2)
   https://github.com/fasteddy516/ButtonEvents  (rev 1.0.1)
   https://github.com/TrippyLighting/EthernetBonjour
-  https://github.com/Seithan/EasyNextionLibrary (rev 1.0.3)
+  https://github.com/Seithan/EasyNextionLibrary (rev 1.0.3) #Nickous 1.0.6
   http://arduiniana.org/libraries/streaming/ (rev 5)
   https://github.com/tardate/TextFinder
 
@@ -125,25 +140,27 @@
 #include "Config.h"
 #include <SPI.h>
 #include <Ethernet.h>
-#include <EthernetBonjour.h>
+#include <EthernetBonjour.h>        // Bonjour (ZeroConf) Library
 #include <SD.h>
-#include <TimeLib.h>
-#include <RunningMedian.h>
-#include <SoftTimer.h>
-#include <yasm.h>
-#include <PID_v1.h>
-#include <Streaming.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+#include <TimeLib.h>                // Low level time and date functions
+#include <RunningMedian.h>          // Determine the running median by means of a circular buffer
+#include <SoftTimer.h>              // Event based timeshare library (+ PciManager dependence)
+#include <yasm.h>                   // Async. state machine
+#include <PID_v1.h>                 // PID regulation loop
+#include <Streaming.h>              // Streaming operator (<<) macros
+#include "OneWire.h"                // Onewire communication
+#include <Wire.h>                   // Two wires / I2C library
+#include <LiquidCrystal_I2C.h>      // Library for I2C LCD displays
 #include <avr/wdt.h>
-#include <stdlib.h>
-#include <ArduinoJson.h>
-#include <EEPROMex.h>
-#include "ArduinoQueue.h"
-#include <Pump.h>
-#include <ButtonEvents.h>
-#include <Bounce2.h>
-#include "EasyNextionLibrary.h"  // Include EasyNextionLibrary
+#include <stdlib.h>                 // Definitions for common types, variables, and functions
+#include <ArduinoJson.h>            // JSON library
+#include <EEPROMex.h>               // Extension of the standard Arduino EEPROM library
+#include "ArduinoQueue.h"           // A lightweight linked list type queue library
+#include <Pump.h>                   // Simple library to handle home-pool filtration and peristaltic pumps (from Loic74650)
+#include <ButtonEvents.h>           // Arduino library for handling of tap, double-tap and press-and-hold button events (need Bounce2 library)
+#include <Bounce2.h>                // Debouncing library for Arduino and Wiring
+#include "EasyNextionLibrary.h"     // Include EasyNextionLibrary
+#include <ArduinoOTA.h>             // Upload sketch over network
 
 // Firmware revision
 String Firmw = "5.0.1";
@@ -226,9 +243,9 @@ unsigned long PublishPeriod = 30000;
 //Signal filtering library. Only used in this case to compute the average
 //over multiple measurements but offers other filtering functions such as median, etc.
 RunningMedian samples_Temp = RunningMedian(10);
-RunningMedian samples_Ph = RunningMedian(10);
-RunningMedian samples_Orp = RunningMedian(10);
-RunningMedian samples_PSI = RunningMedian(3);
+RunningMedian samples_Ph   = RunningMedian(10);
+RunningMedian samples_Orp  = RunningMedian(10);
+RunningMedian samples_PSI  = RunningMedian(3);
 
 EthernetServer server(80);      //Create a server at port 80
 EthernetClient net;             //Ethernet client to connect to MQTT server

@@ -5,9 +5,17 @@
             "includePath": [
                 "C:\\Tools\\arduino-1.8.13\\NickousDocumentsArduino\\libraries\\**",
                 "C:\\Tools\\arduino-1.8.13\\libraries\\**",
-                "C:\\Tools\\arduino-1.8.13\\NickousDocumentsArduino\\hardware\\my_boards\\avr\\**"
+                "C:\\Tools\\arduino-1.8.13\\NickousDocumentsArduino\\hardware\\my_boards\\avr\\**",
+
+                "C:\\Users\\Nickous\\Downloads\\arduino-1.8.13\\tools\\**",
+                "C:\\Users\\Nickous\\Documents\\Arduino\\libraries\\**",
+                "C:\\Users\\Nickous\\Downloads\\arduino-1.8.13\\libraries\\**",
+                "C:\\Users\\Nickous\\Downloads\\arduino-1.8.13\\hardware\\tools\\**",
+                "C:\\Users\\Nickous\\Downloads\\arduino-1.8.13\\hardware\\arduino\\avr\\**"
             ],
-            "forcedInclude": [],
+            "forcedInclude": [
+                "C:\\Tools\\arduino-1.8.13\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
+            ],
             "defines": [
                 "USBCON"
             ],
