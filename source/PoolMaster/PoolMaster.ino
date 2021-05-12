@@ -126,7 +126,7 @@
   https://github.com/johnrickman/LiquidCrystal_I2C (rev 1.1.2) #Nickous 0.3.2
   https://github.com/thijse/Arduino-EEPROMEx (rev 1.0.0)
   https://github.com/EinarArnason/ArduinoQueue #Nickous 1.2.3
-  https://github.com/Loic74650/Pump (rev 0.0.1) #Nickous attention put file Pump.h in main directory
+  https://github.com/Loic74650/Pump (Pump.h -> PUMP_VERSION=1.0.1 05/04/2021) #Nickous attention put file Pump.h in main directory
   https://github.com/PaulStoffregen/Time (rev 1.5) -> /!\ Bug: in file "Time.cpp" "static const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};" must be replaced by "static volatile const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31};" #Nickous 1.6
   https://github.com/adafruit/RTClib (rev 1.2.0)
   https://github.com/thomasfredericks/Bounce2 (rev 2.5.2)

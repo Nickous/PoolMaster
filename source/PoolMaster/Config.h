@@ -55,9 +55,9 @@ RTC_DS3231 rtc;
 #define CHL_PUMP        36
 #define HEAT_ON         37
 
-#define RELAY_R1   38
-#define RELAY_R2   39
-#define RELAY_R6   40
+#define RELAY_R1   38   //Light Water   RELAY_0 sur le TFT
+#define RELAY_R2   39   //Light Deck    RELAY_1 sur le TFT
+#define RELAY_R6   40   //Robot Pump    RELAY_2 sur le TFT
 #define RELAY_R7   41
 #define RELAY_R8   42
 #define RELAY_R9   43
